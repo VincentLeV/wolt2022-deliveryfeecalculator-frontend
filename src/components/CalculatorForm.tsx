@@ -2,10 +2,7 @@ import React, { useState } from "react";
 import {
     Box,
     FormControl,
-    InputLabel,
     TextField,
-    OutlinedInput,
-    InputAdornment,
     Button
 } from "@mui/material";
 import DateTimePicker  from "@mui/lab/DateTimePicker";
@@ -15,20 +12,62 @@ import {
     calculateSurcharge, 
     calculateRushHourFee,
     calculateDeliveryFee,
+    checkRushHour
 } from "../utils/helper";
+import moment from "moment-timezone";
 
-export default function CalculatorForm({ setRes }: {setRes: (res: number) => void}) {
+import ErrorText from "./ErrorText";
+
+export default function CalculatorForm({ 
+    setRes,
+    setIsRushHour,
+    setSurchargeTotal
+}: {
+    setRes: (res: number) => void
+    setIsRushHour: (val: boolean) => void
+    setSurchargeTotal: (val: number) => void
+}) {
     const [ values, setValues ] = useState<CalculatorFormValues>({
         cartValue: "",
         deliveryDistance: "",
         amountOfItems: "",
     });
     const [ time, setTime ] = useState<Date | null>(new Date());
+    const [ isError, setIsError ] = useState<boolean>(false);
+    const [ errorMsg, setErrorMsg ] = useState<string>("");
+    const [ targetErr, setTargetErr ] = useState<string[]>([]);
+    
     const handleChange = (key: keyof CalculatorFormValues) => (e: React.ChangeEvent<HTMLInputElement>) => {
+        if ( !e.target.value ) {
+            setIsError(false);
+            setErrorMsg("");
+        }
+        
+        if ( e.target.value.match(/[a-zA-z]+/) ) {
+            setIsError(true);
+            setTargetErr([...new Set([ ...targetErr, e.target.id ])]);
+            setErrorMsg("Only numbers are allowed");
+        } else if ( e.target.value.match(/[.]+/) ) {
+            if ( key === "deliveryDistance" || key === "amountOfItems" ) {
+                setIsError(true);
+                setTargetErr([...new Set([ ...targetErr, e.target.id ])]);
+                setErrorMsg("Only integer is allowed");
+            }
+        } else {
+            setIsError(false);
+            setErrorMsg("");
+            setTargetErr([]);
+        }
+
         setValues({ ...values, [key]: e.target.value });
     };
 
-    const handleTimeChange = (newValue: Date | null) => setTime(newValue);
+    const handleTimeChange = (newValue: Date | null) => {
+        const weekDay: string = moment.tz(time, "UTC").format("dddd").toLowerCase();
+        const timeOfDay: string = moment.tz(time, "UTC").format("HH:mm");
+        setIsRushHour(checkRushHour(weekDay, timeOfDay));
+        setTime(newValue);
+    };
 
     const handleCalculateDeliveryFee = (): void => {
         const distanceFee: number = calculateDistanceFee(values.deliveryDistance);
@@ -38,6 +77,8 @@ export default function CalculatorForm({ setRes }: {setRes: (res: number) => voi
 
         const result: number = calculateDeliveryFee(preliminaryFee, rushHourFee, values.cartValue);
         setRes(result);
+        setSurchargeTotal(surcharge);
+        setValues({ cartValue: "", deliveryDistance: "", amountOfItems: "", });
     };
     
     return (
@@ -46,44 +87,58 @@ export default function CalculatorForm({ setRes }: {setRes: (res: number) => voi
             sx={{
                 display: "flex",
                 flexDirection: "column",
-                "& .MuiTextField-root": { m: 1, width: "25ch" },
+                alignItems: "center",   
+                "& .MuiTextField-root": { my: 1, width: "25ch" },
             }}
             noValidate
             autoComplete="off"
         >
-            <FormControl sx={{ m: 1, width: "25ch" }}>
-                <InputLabel htmlFor="cart-value">Cart Value</InputLabel>
-                <OutlinedInput
-                    label="Cart Value"
+            <FormControl sx={{ width: "25ch" }}>
+                <TextField
+                    error={isError && targetErr.includes("cart-value")}
+                    label="Cart Value (€)"
                     id="cart-value"
                     value={values.cartValue}
                     onChange={handleChange("cartValue")}
-                    endAdornment={<InputAdornment position="end">&euro;</InputAdornment>}
+                    size="small"
+                    InputLabelProps={{
+                        shrink: true,
+                    }}
                 />
+                {isError && targetErr.includes("cart-value") ? <ErrorText msg={errorMsg} /> : null}
             </FormControl>
 
-            <FormControl sx={{ m: 1, width: "25ch" }}>
-                <InputLabel htmlFor="delivery-distance">Delivery Distance</InputLabel>
-                <OutlinedInput
-                    label="Delivery Distance"
+            <FormControl sx={{ width: "25ch" }}>
+                <TextField
+                    error={isError && targetErr.includes("delivery-distance")}
+                    label="Delivery Distance (m)"
                     id="delivery-distance"
                     value={values.deliveryDistance}
                     onChange={handleChange("deliveryDistance")}
-                    endAdornment={<InputAdornment position="end">m</InputAdornment>}
+                    size="small"
+                    InputLabelProps={{
+                        shrink: true,
+                    }}
                 />
+                {isError && targetErr.includes("delivery-distance") ? <ErrorText msg={errorMsg} /> : null}
             </FormControl>
             
-            <FormControl sx={{ m: 1, width: "25ch" }}>
-                <InputLabel htmlFor="amount-of-items">Amount of Items</InputLabel>
-                <OutlinedInput
+            <FormControl sx={{ width: "25ch" }}>
+                <TextField
+                    error={isError && targetErr.includes("amount-of-items")}
                     label="Amount of Items"
                     id="amount-of-items"
                     value={values.amountOfItems}
                     onChange={handleChange("amountOfItems")}
+                    size="small"
+                    InputLabelProps={{
+                        shrink: true,
+                    }}
                 />
+                {isError && targetErr.includes("amount-of-items") ? <ErrorText msg={errorMsg} /> : null}
             </FormControl>
 
-            <FormControl sx={{ m: 1, width: "25ch" }}>
+            <FormControl sx={{ my: 1 }}>
                 <DateTimePicker 
                     label="Time"
                     value={time}
@@ -95,7 +150,7 @@ export default function CalculatorForm({ setRes }: {setRes: (res: number) => voi
             <Button
                 id="calculate-btn"
                 variant="contained"
-                sx={{ m: 1, width: "300px" }}
+                sx={{ width: "270px" }}
                 onClick={handleCalculateDeliveryFee}
             >
                 Calculate Delivery Price
