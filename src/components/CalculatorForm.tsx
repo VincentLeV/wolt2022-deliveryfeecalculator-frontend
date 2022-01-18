@@ -93,6 +93,7 @@ export default function CalculatorForm({ setRes }: {setRes: (res: number) => voi
             </FormControl>
 
             <Button
+                id="calculate-btn"
                 variant="contained"
                 sx={{ m: 1, width: "300px" }}
                 onClick={handleCalculateDeliveryFee}
