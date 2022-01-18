@@ -10,7 +10,12 @@ import {
 } from "@mui/material";
 import DateTimePicker  from "@mui/lab/DateTimePicker";
 import { CalculatorFormValues } from "../types";
-import { calculateDistanceFee, calculateSurcharge, calculateRushHourFee } from "../utils/helper";
+import { 
+    calculateDistanceFee, 
+    calculateSurcharge, 
+    calculateRushHourFee,
+    calculateDeliveryFee,
+} from "../utils/helper";
 
 export default function CalculatorForm({ setRes }: {setRes: (res: number) => void}) {
     const [ values, setValues ] = useState<CalculatorFormValues>({
@@ -25,22 +30,14 @@ export default function CalculatorForm({ setRes }: {setRes: (res: number) => voi
 
     const handleTimeChange = (newValue: Date | null) => setTime(newValue);
 
-    const calculateDeliveryFee = (): number => {
-        const distanceFee = calculateDistanceFee(values.deliveryDistance);
-        const surcharge = calculateSurcharge(values.cartValue, values.amountOfItems);
-        const preliminaryFee = distanceFee + surcharge;
-        const rushHourFee = calculateRushHourFee(preliminaryFee, time);
+    const handleCalculateDeliveryFee = (): void => {
+        const distanceFee: number = calculateDistanceFee(values.deliveryDistance);
+        const surcharge: number = calculateSurcharge(values.cartValue, values.amountOfItems);
+        const preliminaryFee: number = distanceFee + surcharge;
+        const rushHourFee: number = calculateRushHourFee(preliminaryFee, time);
 
-        if ( preliminaryFee > 15 || preliminaryFee + rushHourFee > 15 ) {
-            setRes(15);
-            return 15;
-        } else if ( parseFloat(values.cartValue) >= 100 ) {
-            setRes(0);
-            return 0;
-        }
-
-        setRes(Math.round((preliminaryFee + rushHourFee + Number.EPSILON) * 100) / 100);
-        return Math.round((preliminaryFee + rushHourFee + Number.EPSILON) * 100) / 100;
+        const result: number = calculateDeliveryFee(preliminaryFee, rushHourFee, values.cartValue);
+        setRes(result);
     };
     
     return (
@@ -98,7 +95,7 @@ export default function CalculatorForm({ setRes }: {setRes: (res: number) => voi
             <Button
                 variant="contained"
                 sx={{ m: 1, width: "300px" }}
-                onClick={calculateDeliveryFee}
+                onClick={handleCalculateDeliveryFee}
             >
                 Calculate Delivery Price
             </Button>

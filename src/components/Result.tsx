@@ -4,7 +4,7 @@ export default function Result({ res}: {res: number | null}) {
     return (
         <div>
             <span>Delivery Price: </span>
-            <span>{res} &euro;</span>
+            <span>{res ? res : 0} &euro;</span>
         </div>
     );
 }
