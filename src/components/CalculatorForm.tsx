@@ -13,7 +13,7 @@ import {
     calculateRushHourFee,
     calculateDeliveryFee,
     checkRushHour
-} from "../utils/helper";
+} from "../utils/helpers";
 import moment from "moment-timezone";
 
 import ErrorText from "./ErrorText";
@@ -37,7 +37,7 @@ export default function CalculatorForm({
     const [ errorMsg, setErrorMsg ] = useState<string>("");
     const [ targetErr, setTargetErr ] = useState<string[]>([]);
     
-    const handleChange = (key: keyof CalculatorFormValues) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (key: keyof CalculatorFormValues) => (e: React.ChangeEvent<HTMLInputElement>): void => {
         if ( !e.target.value ) {
             setIsError(false);
             setErrorMsg("");
@@ -62,7 +62,7 @@ export default function CalculatorForm({
         setValues({ ...values, [key]: e.target.value });
     };
 
-    const handleTimeChange = (newValue: Date | null) => {
+    const handleTimeChange = (newValue: Date | null): void => {
         const weekDay: string = moment.tz(time, "UTC").format("dddd").toLowerCase();
         const timeOfDay: string = moment.tz(time, "UTC").format("HH:mm");
         setIsRushHour(checkRushHour(weekDay, timeOfDay));

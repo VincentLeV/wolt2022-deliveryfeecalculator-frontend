@@ -9,7 +9,8 @@ describe("Delivery Fee Calculator App", function() {
     });
 
     it("the initial delivery fee is 0€", function() {
-        cy.contains("Delivery Price: 0 €");
+        cy.contains("Delivery Price");
+        cy.contains("0€");
     });
 
     it("user can calculate delivery fee", function() {

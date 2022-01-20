@@ -4,7 +4,7 @@ import {
     calculateRushHourFee,
     calculateDeliveryFee,
     checkRushHour
-} from "../utils/helper";
+} from "../utils/helpers";
 
 describe("Distance Fee", () => {
     test("is 2€ for the first 1000 meters", () => {
